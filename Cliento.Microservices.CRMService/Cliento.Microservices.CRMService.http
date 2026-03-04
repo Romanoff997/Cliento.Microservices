@@ -1,0 +1,6 @@
+@Cliento.Microservices.CRMService_HostAddress = http://localhost:5150
+
+GET {{Cliento.Microservices.CRMService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

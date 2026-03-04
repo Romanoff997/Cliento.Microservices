@@ -1,0 +1,6 @@
+@Cliento.Microservices.NotificationService_HostAddress = http://localhost:5223
+
+GET {{Cliento.Microservices.NotificationService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
