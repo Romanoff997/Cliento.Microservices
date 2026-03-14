@@ -7,16 +7,16 @@ namespace Cliento.Microservices.UserService.Controllers
     public class AuthController : ControllerBase
     {
         // Для простоты — регистрация возвращает новый Guid
-        [HttpPost("register")]
-        public IActionResult Register([FromBody] RegisterDto dto)
+        [HttpGet("register")]
+        public IActionResult Register()//[FromBody] RegisterDto dto)
         {
             var userId = Guid.NewGuid();
             // Сохранение в БД упростили
             return Ok(new { UserId = userId, Message = "Registered (demo)" });
         }
 
-        [HttpPost("login")]
-        public IActionResult Login([FromBody] LoginDto dto)
+        [HttpGet("login")]
+        public IActionResult Login()//[FromBody] LoginDto dto)
         {
             // В демо — возвращаем новый/существующий GUID
             var userId = Guid.NewGuid();

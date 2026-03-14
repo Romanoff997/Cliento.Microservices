@@ -1,6 +1,8 @@
 using Cliento.Microservices.CRMService.Cache;
 using Cliento.Microservices.CRMService.Data;
 using Cliento.Microservices.Shared.Messaging;
+using Microsoft.EntityFrameworkCore;
+using Serilog;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);

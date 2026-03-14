@@ -1,6 +1,5 @@
 ﻿using Cliento.Microservices.CRMService.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection.Emit;
 
 namespace Cliento.Microservices.CRMService.Data
 {

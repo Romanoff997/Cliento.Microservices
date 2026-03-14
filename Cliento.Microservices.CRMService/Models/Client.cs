@@ -1,6 +1,4 @@
-﻿using static System.Collections.Specialized.BitVector32;
-
-namespace Cliento.Microservices.CRMService.Models
+﻿namespace Cliento.Microservices.CRMService.Models
 {
     public class Client
     {

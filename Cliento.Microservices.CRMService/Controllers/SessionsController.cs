@@ -1,10 +1,12 @@
 ﻿using Cliento.Microservices.CRMService.Cache;
 using Cliento.Microservices.CRMService.Data;
+using Cliento.Microservices.CRMService.DTOs;
 using Cliento.Microservices.CRMService.Extensions;
 using Cliento.Microservices.CRMService.Models;
 using Cliento.Microservices.Shared.Events;
 using Cliento.Microservices.Shared.Messaging;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace Cliento.Microservices.CRMService.Controllers

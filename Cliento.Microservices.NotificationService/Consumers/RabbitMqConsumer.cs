@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Connections;
+﻿using Cliento.Microservices.Shared.Events;
+using Microsoft.AspNetCore.Connections;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 using System.Text;
 using System.Text.Json;
 

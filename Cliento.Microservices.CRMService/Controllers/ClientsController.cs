@@ -2,9 +2,12 @@
 using Cliento.Microservices.CRMService.DTOs;
 using Cliento.Microservices.CRMService.Extensions;
 using Cliento.Microservices.CRMService.Models;
+
 using Cliento.Microservices.Shared.Events;
 using Cliento.Microservices.Shared.Messaging;
+
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Cliento.Microservices.CRMService.Controllers
 {
@@ -26,11 +29,19 @@ namespace Cliento.Microservices.CRMService.Controllers
         {
             if (!HttpContext.TryGetUserId(out var userId)) return Unauthorized();
 
-            var client = new Client { Id = Guid.NewGuid(), Name = dto.Name, Email = dto.Email, Phone = dto.Phone, UserId = userId, CreatedAt = DateTime.UtcNow };
+            var client = new Client 
+            { 
+                Id = Guid.NewGuid(), 
+                Name = dto.Name, 
+                Email = dto.Email, 
+                Phone = dto.Phone, 
+                UserId = userId, 
+                CreatedAt = DateTime.UtcNow 
+            };
+
             _db.Clients.Add(client);
             await _db.SaveChangesAsync();
 
-            // Publish event
             var evt = new ClientCreatedEvent(client.Id, client.Name, client.Email);
             await _publisher.PublishAsync("client.created", evt);
 
@@ -45,7 +56,5 @@ namespace Cliento.Microservices.CRMService.Controllers
             if (client == null) return NotFound();
             return Ok(client);
         }
-
-        // Update/Delete similarly — check UserId
     }
 }
