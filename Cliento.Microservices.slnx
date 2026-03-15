@@ -3,4 +3,7 @@
   <Project Path="Cliento.Microservices.NotificationService/Cliento.Microservices.NotificationService.csproj" />
   <Project Path="Cliento.Microservices.Shared/Cliento.Microservices.Shared.csproj" />
   <Project Path="Cliento.Microservices.UserService/Cliento.Microservices.UserService.csproj" />
+  <Project Path="docker-compose.dcproj">
+    <Build />
+  </Project>
 </Solution>

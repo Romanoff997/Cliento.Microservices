@@ -1,0 +1,93 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: crm_postgres
+    environment:
+      POSTGRES_USER: crmuser
+      POSTGRES_PASSWORD: crmpass
+      POSTGRES_DB: crmdb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - crm_network
+
+  rabbitmq:
+    image: rabbitmq:3.11-management
+    container_name: crm_rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: rabbit
+      RABBITMQ_DEFAULT_PASS: rabbitpass
+    volumes:
+      - rabbitdata:/var/lib/rabbitmq
+    ports:
+      - "5672:5672"    
+      - "15672:15672"  
+    networks:
+      - crm_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: crm_redis
+    volumes:
+      - redisdata:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - crm_network
+
+  crmservice:
+    build:
+      context: ./Cliento.Microservices.CRMService
+      dockerfile: Dockerfile
+    container_name: crmservice
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=crmdb;Username=crmuser;Password=crmpass
+      - Redis__Configuration=redis:6379
+      - RabbitMq__HostName=rabbitmq
+      - RabbitMq__UserName=rabbit
+      - RabbitMq__Password=rabbitpass
+      - RabbitMq__Exchange=crm.events
+    ports:
+      - "5002:80"
+    depends_on:
+      - postgres
+      - rabbitmq
+      - redis
+    networks:
+      - crm_network
+
+  notificationservice:
+    build:
+      context: ./Cliento.Microservices.NotificationService
+      dockerfile: Dockerfile
+    container_name: notificationservice
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - RabbitMq__HostName=rabbitmq
+      - RabbitMq__UserName=rabbit
+      - RabbitMq__Password=rabbitpass
+      - RabbitMq__Exchange=crm.events
+      - RabbitMq__Queue=notifications
+      - RabbitMq__RoutingKey=notifications.#   
+    ports:
+      - "5003:80"
+    depends_on:
+      - rabbitmq
+    networks:
+      - crm_network
+
+volumes:
+  pgdata:
+  rabbitdata:
+  redisdata:
+
+networks:
+  crm_network:
+    driver: bridge

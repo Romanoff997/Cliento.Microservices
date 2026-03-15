@@ -45,7 +45,6 @@ namespace Cliento.Microservices.NotificationService.Consumers
                     Console.WriteLine($"[Notification] Reminder set for session {evt?.SessionId} at {evt?.ScheduledAt} for client {evt?.ClientId}");
                 }
                 _channel.BasicAck(ea.DeliveryTag, multiple: false);
-                await Task.Yield();
             };
 
             _channel.BasicConsume(_queueName, autoAck: false, consumer: consumer);
