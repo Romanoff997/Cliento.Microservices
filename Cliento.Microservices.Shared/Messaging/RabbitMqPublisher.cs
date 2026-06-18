@@ -1,21 +1,26 @@
-﻿using RabbitMQ.Client;
+﻿using Cliento.Microservices.Shared.Settings;
+using RabbitMQ.Client;
 using System.Text;
 using System.Text.Json;
 
 namespace Cliento.Microservices.Shared.Messaging
 {
-
-
     public class RabbitMqPublisher : IEventPublisher, IDisposable
     {
         private readonly IConnection _connection;
         private readonly IModel _channel;
         private readonly string _exchangeName;
 
-        public RabbitMqPublisher(string hostName, string exchangeName = "crm.events")
+        public RabbitMqPublisher(RabbitMqSettings settings)
         {
-            _exchangeName = exchangeName;
-            var factory = new ConnectionFactory { HostName = hostName };
+            _exchangeName = settings.Exchange;
+            var factory = new ConnectionFactory 
+            { 
+                HostName = settings.HostName,
+                Port = settings.Port,
+                UserName = settings.UserName,
+                Password = settings.Password,
+            };
             _connection = factory.CreateConnection();
             _channel = _connection.CreateModel();
             _channel.ExchangeDeclare(_exchangeName, ExchangeType.Topic, durable: true);

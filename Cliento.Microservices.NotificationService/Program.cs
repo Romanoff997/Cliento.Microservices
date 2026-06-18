@@ -1,9 +1,10 @@
 using Cliento.Microservices.CRMService.Cache;
 using Cliento.Microservices.CRMService.Data;
+using Cliento.Microservices.NotificationService.Services;
 using Cliento.Microservices.Shared.Messaging;
+using Cliento.Microservices.Shared.Settings;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
-using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((ctx, lc) => lc.WriteTo.Console());
@@ -12,22 +13,25 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<CrmDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
+    options.UseNpgsql(builder.Configuration.GetValue<string>("ConnectionStrings:Postgres")));
 
-builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
-    ConnectionMultiplexer.Connect(builder.Configuration.GetValue<string>("Redis:Connection")));
-
-builder.Services.AddSingleton<RedisSessionCache>();
-
+var rabbitMqSettings = new RabbitMqSettings();
+builder.Configuration.GetSection("RabbitMq").Bind(rabbitMqSettings);
 // RabbitMQ publisher (host from config)
 builder.Services.AddSingleton<IEventPublisher>(sp =>
-    new RabbitMqPublisher(builder.Configuration.GetValue<string>("RabbitMq:Host")));
+    new RabbitMqPublisher(rabbitMqSettings));
+
+builder.Services.AddSingleton<INativeConsoleNotificationSender>(sp =>
+    new ConsoleNotificationSender());
 
 // Add Cors etc.
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 app.MapControllers();
 
 app.Run();

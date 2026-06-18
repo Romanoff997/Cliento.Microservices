@@ -1,4 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Cliento.Microservices.CRMService.Data;
+using Cliento.Microservices.CRMService.Models;
+using Cliento.Microservices.UserService.DTOs;
+
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Cliento.Microservices.UserService.Controllers
 {
@@ -6,21 +11,35 @@ namespace Cliento.Microservices.UserService.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        // Для простоты — регистрация возвращает новый Guid
-        [HttpGet("register")]
-        public IActionResult Register()//[FromBody] RegisterDto dto)
+        private readonly UserCrmDbContext _db;
+        public AuthController(UserCrmDbContext db)
         {
-            var userId = Guid.NewGuid();
-            // Сохранение в БД упростили
-            return Ok(new { UserId = userId, Message = "Registered (demo)" });
+            _db = db;
+        }
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterDto dto)
+        {
+            //var user = new UserCrm
+            //{
+            //    Id = Guid.NewGuid(),
+            //    UserId = Guid.NewGuid(),
+            //    Login = dto.Login,
+            //    Password = dto.Password,
+            //};
+
+            //_db.Users.Add(user);
+            //await _db.SaveChangesAsync();
+
+            return Ok(new { Message = "Registered (demo)" });
         }
 
-        [HttpGet("login")]
-        public IActionResult Login()//[FromBody] LoginDto dto)
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
-            // В демо — возвращаем новый/существующий GUID
-            var userId = Guid.NewGuid();
-            return Ok(new { UserId = userId, Message = "Logged in (demo)" });
+            //var user = await _db.Users.FirstOrDefaultAsync(x => x.Login == dto.Login && x.Password == dto.Password);
+            //if (user == null) return NotFound();
+
+            return Ok(new { userId = Guid.NewGuid(), Message = "Logged in (demo)" });
         }
     }
 }

@@ -8,6 +8,7 @@ namespace Cliento.Microservices.CRMService.Cache
     public class RedisSessionCache
     {
         private readonly IDatabase _db;
+        private const int MINUTES = 10;
         public RedisSessionCache(IConnectionMultiplexer mux)
         {
             _db = mux.GetDatabase();
@@ -25,7 +26,7 @@ namespace Cliento.Microservices.CRMService.Cache
         public async Task SetSessionsAsync(Guid clientId, List<Session> sessions, TimeSpan? ttl = null)
         {
             var json = JsonSerializer.Serialize(sessions);
-            await _db.StringSetAsync(Key(clientId), json, ttl ?? TimeSpan.FromMinutes(10));
+            await _db.StringSetAsync(Key(clientId), json, ttl ?? TimeSpan.FromMinutes(MINUTES));
         }
 
         public async Task InvalidateAsync(Guid clientId)

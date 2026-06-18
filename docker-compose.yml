@@ -1,53 +1,15 @@
-version: "3.8"
-
 services:
-  postgres:
-    image: postgres:15
-    container_name: crm_postgres
-    environment:
-      POSTGRES_USER: crmuser
-      POSTGRES_PASSWORD: crmpass
-      POSTGRES_DB: crmdb
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    networks:
-      - crm_network
-
-  rabbitmq:
-    image: rabbitmq:3.11-management
-    container_name: crm_rabbitmq
-    environment:
-      RABBITMQ_DEFAULT_USER: rabbit
-      RABBITMQ_DEFAULT_PASS: rabbitpass
-    volumes:
-      - rabbitdata:/var/lib/rabbitmq
-    ports:
-      - "5672:5672"    
-      - "15672:15672"  
-    networks:
-      - crm_network
-
-  redis:
-    image: redis:7-alpine
-    container_name: crm_redis
-    volumes:
-      - redisdata:/data
-    ports:
-      - "6379:6379"
-    networks:
-      - crm_network
-
   crmservice:
+    image: crmservice
     build:
       context: ./Cliento.Microservices.CRMService
       dockerfile: Dockerfile
-    container_name: crmservice
+      args:
+        addMigrations: "true"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=crmdb;Username=crmuser;Password=crmpass
+      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=crmdb;Username=crmuser;Password=crmpass
       - Redis__Configuration=redis:6379
       - RabbitMq__HostName=rabbitmq
       - RabbitMq__UserName=rabbit
@@ -56,17 +18,25 @@ services:
     ports:
       - "5002:80"
     depends_on:
-      - postgres
-      - rabbitmq
-      - redis
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: always
     networks:
-      - crm_network
+      - microservices-network
+    command:
+      - sh -c "dotnet ef database update --project Cliento.Microservices.CRMService/Cliento.Microservices.CRMService.csproj &&
+              dotnet Cliento.Microservices.CRMService.dll"
 
   notificationservice:
+    image: notificationservices
     build:
       context: ./Cliento.Microservices.NotificationService
       dockerfile: Dockerfile
-    container_name: notificationservice
+    restart: always
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
@@ -74,20 +44,99 @@ services:
       - RabbitMq__UserName=rabbit
       - RabbitMq__Password=rabbitpass
       - RabbitMq__Exchange=crm.events
-      - RabbitMq__Queue=notifications
-      - RabbitMq__RoutingKey=notifications.#   
+      - RabbitMq__Queue=crm.events.queue
+      - RabbitMq__RoutingKey=notifications
     ports:
       - "5003:80"
     depends_on:
-      - rabbitmq
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
-      - crm_network
+      - microservices-network
+ 
+  userservice:
+    image: userservice
+    build:
+      context: ./Cliento.Microservices.UserService
+      dockerfile: Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=crmdb;Username=crmuser;Password=crmpass
+    ports:
+      - "5004:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: always
+    networks:
+      - microservices-network
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: crmuser
+      POSTGRES_PASSWORD: crmpass
+      POSTGRES_DB: crmdb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - microservices-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: rabbit
+      RABBITMQ_DEFAULT_PASS: rabbitpass
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    ports:
+      - "5672:5672"    # AMQP
+      - "15672:15672"  # Management UI
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - microservices-network
+
+  redis:
+    image: redis:7
+    command: ["redis-server"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data/lib/reddis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - microservices-network
+
 
 volumes:
-  pgdata:
-  rabbitdata:
-  redisdata:
+  postgres_data:
+  rabbitmq_data:
+  redis_data:
 
 networks:
-  crm_network:
+  microservices-network:
     driver: bridge

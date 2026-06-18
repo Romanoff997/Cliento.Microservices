@@ -62,10 +62,8 @@ namespace Cliento.Microservices.CRMService.Controllers
             _db.Sessions.Add(session);
             await _db.SaveChangesAsync();
 
-            // invalidate cache for this client
             await _cache.InvalidateAsync(clientId);
 
-            // Publish event
             var evt = new SessionPlannedEvent(session.Id, session.ClientId, session.ScheduledAt, session.DurationInMinutes);
             await _publisher.PublishAsync("session.planned", evt);
 
