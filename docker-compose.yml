@@ -1,4 +1,5 @@
 services:
+
   crmservice:
     image: crmservice
     build:
@@ -27,9 +28,6 @@ services:
     restart: always
     networks:
       - microservices-network
-    command:
-      - sh -c "dotnet ef database update --project Cliento.Microservices.CRMService/Cliento.Microservices.CRMService.csproj &&
-              dotnet Cliento.Microservices.CRMService.dll"
 
   notificationservice:
     image: notificationservices
@@ -131,11 +129,23 @@ services:
     networks:
       - microservices-network
 
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com  # Задайте адрес электронной почты для входа
+      PGADMIN_DEFAULT_PASSWORD: admin123  # Задайте пароль для входа
+    ports:
+      - "5050:80"  # Убедитесь, что порт 5050 доступен на вашей машине
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin  # Место для сохранения данных pgAdmin
+    networks:
+      - microservices-network
 
 volumes:
   postgres_data:
   rabbitmq_data:
   redis_data:
+  pgadmin_data:
 
 networks:
   microservices-network:
